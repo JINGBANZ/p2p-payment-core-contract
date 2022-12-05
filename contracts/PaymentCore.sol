@@ -32,6 +32,12 @@ contract PaymentCore {
         uint256 indexed amountPaid
     );
 
+    event OrderConfirmed(uint256 indexed orderId);
+
+    event WithdrawSuccessful(address indexed merchant, uint256 indexed proceeds);
+
+    event OrderCanceled(uint256 indexed orderId);
+
     //contract admin
     address private immutable i_admin;
 
@@ -101,6 +107,8 @@ contract PaymentCore {
 
         s_orders[orderId].orderStatus = OrderStatus.COMPLETED;
         s_merchantProceeds[orderInfo.merchantAddress] += orderInfo.amountPaid;
+
+        emit OrderConfirmed(orderId);
     }
 
     //withdraw proceeds
@@ -114,6 +122,8 @@ contract PaymentCore {
         s_merchantProceeds[msg.sender] = 0;
         (bool success, ) = payable(msg.sender).call{value: proceeds}("");
         require(success, "Transer failed");
+
+        emit WithdrawSuccessful(msg.sender, proceeds);
     }
 
     //cancel order & batch cancel to save gas
@@ -124,8 +134,13 @@ contract PaymentCore {
             revert PaymentCore__CancelOrderNotAllowed(msg.sender, orderId);
         }
 
+        //mark order as completed after cancellation
+        s_orders[orderId].orderStatus = OrderStatus.COMPLETED;
+
         (bool success, ) = payable(orderInfo.customerAddress).call{value: orderInfo.amountPaid}("");
         require(success, "Transer failed");
+
+        emit OrderCanceled(orderId);
     }
 
     function getAdmin() public view returns (address) {
@@ -134,5 +149,9 @@ contract PaymentCore {
 
     function getOrder(uint256 orderId) public view returns (OrderInfo memory) {
         return s_orders[orderId];
+    }
+
+    function getMerchantProceeds(address merchantAddress) public view returns (uint256) {
+        return s_merchantProceeds[merchantAddress];
     }
 }

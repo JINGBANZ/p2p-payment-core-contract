@@ -2,11 +2,11 @@
 pragma solidity ^0.8.9;
 
 error PaymentCore__PaymentAmountNotValid();
-error PaymentCore_OrderAlreadyExist(uint256 orderId);
-error PaymentCore_OrderNotExist(uint256 orderId);
+error PaymentCore__OrderAlreadyExist(uint256 orderId);
+error PaymentCore__OrderNotExist(uint256 orderId);
 error PaymentCore__ConfirmOrderNotAllowed(address callerAddress, uint256 orderId);
-error PaymentCore_NoFundToWithdraw(address caller);
-error PaymentCore_OrderNotPending(uint256 orderId);
+error PaymentCore__NoFundToWithdraw(address caller);
+error PaymentCore__OrderNotPending(uint256 orderId);
 error PaymentCore__CancelOrderNotAllowed(address caller, uint256 orderId);
 
 contract PaymentCore {
@@ -26,6 +26,12 @@ contract PaymentCore {
         uint256 amountPaid;
     }
 
+    event OrderPlaced(
+        address indexed merchantAddress,
+        address indexed customerAddress,
+        uint256 indexed amountPaid
+    );
+
     //contract admin
     address private immutable i_admin;
 
@@ -38,7 +44,7 @@ contract PaymentCore {
     modifier validOrder(uint256 orderId) {
         OrderInfo memory orderInfo = s_orders[orderId];
         if (orderInfo.merchantAddress != address(0)) {
-            revert PaymentCore_OrderAlreadyExist(orderId);
+            revert PaymentCore__OrderAlreadyExist(orderId);
         }
         _;
     }
@@ -46,7 +52,7 @@ contract PaymentCore {
     modifier orderExist(uint256 orderId) {
         OrderInfo memory orderInfo = s_orders[orderId];
         if (orderInfo.merchantAddress == address(0)) {
-            revert PaymentCore_OrderNotExist(orderId);
+            revert PaymentCore__OrderNotExist(orderId);
         }
         _;
     }
@@ -54,7 +60,7 @@ contract PaymentCore {
     modifier orderPending(uint256 orderId) {
         OrderInfo memory orderInfo = s_orders[orderId];
         if (orderInfo.orderStatus != OrderStatus.PENDING) {
-            revert PaymentCore_OrderNotPending(orderId);
+            revert PaymentCore__OrderNotPending(orderId);
         }
         _;
     }
@@ -79,6 +85,8 @@ contract PaymentCore {
             OrderStatus.PENDING,
             msg.value
         );
+
+        emit OrderPlaced(merchantAddress, msg.sender, msg.value);
     }
 
     //confirm order & batch confirm to save gas
@@ -100,7 +108,7 @@ contract PaymentCore {
         uint256 proceeds = s_merchantProceeds[msg.sender];
 
         if (proceeds <= 0) {
-            revert PaymentCore_NoFundToWithdraw(msg.sender);
+            revert PaymentCore__NoFundToWithdraw(msg.sender);
         }
 
         s_merchantProceeds[msg.sender] = 0;
@@ -118,5 +126,13 @@ contract PaymentCore {
 
         (bool success, ) = payable(orderInfo.customerAddress).call{value: orderInfo.amountPaid}("");
         require(success, "Transer failed");
+    }
+
+    function getAdmin() public view returns (address) {
+        return i_admin;
+    }
+
+    function getOrder(uint256 orderId) public view returns (OrderInfo memory) {
+        return s_orders[orderId];
     }
 }

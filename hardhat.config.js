@@ -3,6 +3,8 @@ require("@nomiclabs/hardhat-ethers")
 require("hardhat-deploy")
 require("dotenv").config()
 
+COINMARKETCAP_KEY = process.env.COINMARKETCAP_KEY || ""
+
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
     defaultNetwork: "hardhat",
@@ -29,7 +31,13 @@ module.exports = {
         },
     },
     gasReporter: {
-        enabled: false,
+        enabled: true,
+        currency: "USD",
+        outputFile: "gas-report.txt",
+        noColors: true,
+        coinmarketcap: COINMARKETCAP_KEY,
+        token: "ETH", //MATIC ETH
+        // gasPriceApi: "https://api.polygonscan.com/api?module=proxy&action=eth_gasPrice",
     },
     solidity: "0.8.9",
 }

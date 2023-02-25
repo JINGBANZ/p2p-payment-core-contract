@@ -27,9 +27,10 @@ contract PaymentCore {
     }
 
     event OrderPlaced(
+        uint256 indexed orderId,
         address indexed merchantAddress,
         address indexed customerAddress,
-        uint256 indexed amountPaid
+        uint256 amountPaid
     );
 
     event OrderConfirmed(uint256 indexed orderId);
@@ -92,7 +93,7 @@ contract PaymentCore {
             msg.value
         );
 
-        emit OrderPlaced(merchantAddress, msg.sender, msg.value);
+        emit OrderPlaced(orderId, merchantAddress, msg.sender, msg.value);
     }
 
     //confirm order & batch confirm to save gas

@@ -1,13 +1,3 @@
-# Sample Hardhat Project
+# Payment smart contract to enable P2P marketplace
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a script that deploys that contract.
-
-Try running some of the following tasks:
-
-```shell
-npx hardhat help
-npx hardhat test
-REPORT_GAS=true npx hardhat test
-npx hardhat node
-npx hardhat run scripts/deploy.js
-```
+it's a core compoent in p2p marketplace to accept crypto currency as a payment method, while keeping your money safe in the smart contract before product is delivered.
